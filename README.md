@@ -1,138 +1,119 @@
 
 ---
 
-In the meantime, here is your complete, polished **`README.md`** for the **Food Insecurity Notification Automation** project using **Twilio + Flask + Jupyter Notebook**.
-
----
-
 ```markdown
-# 📞 Food Insecurity Notification Automation (Twilio + Flask + Jupyter)
+# 📧 Food Insecurity Email Automation System
 
-This project automates **outreach calls to patients** to assess food insecurity using the **Twilio Voice API**. It calls each patient, asks them two key food access questions, and routes follow-up actions based on their input.
+This project automates the process of:
+
+1. Sending customized emails to a list of patients from an Excel file.
+2. Monitoring replies via Gmail (IMAP).
+3. Updating the Excel sheet based on responses to detect food insecurity.
 
 ---
 
 ## 🚀 Features
 
-- 🧠 Asks two automated voice questions related to food insecurity
-- ⌨ Accepts keypad (DTMF) input from the user (1 = Yes, 2 = No)
-- 📞 Places outbound calls using Twilio's programmable voice
-- 🖥️ Flask web server handles Twilio webhook routes and logic
-- 📊 Designed for integration with Excel/CSV patient data
-- 🌐 Supports local development via **Ngrok**
+- ✅ Reads patient names & emails from Excel (`.xlsx`)
+- ✅ Sends custom email messages via Gmail SMTP
+- ✅ Parses email replies using IMAP
+- ✅ Automatically marks `"Yes"` or `"No"` in Excel
+- ✅ Console logs for every step (with [REPLY] previews)
 
 ---
 
-## 🗂️ Project Structure
+## 📁 Folder Structure
 
 ```
 
-twilio\_food\_insecurity/
-├── food\_insecurity\_voice\_workflow\.ipynb  # Jupyter Notebook for initiating calls
-├── twilio\_voice\_server.py                # Flask server for Twilio webhook handling
-├── sample1.xlsx                          # Excel file with patient data
-├── requirements.txt                      # Dependencies
+your-project/
+├── sample.xlsx                  # Input Excel file (Name, Email)
+├── updated\_sample.xlsx          # Auto-saved result with Food Insecurity status
+├── email\_automation.ipynb       # Main Jupyter notebook
+├── README.md                    # This file
 
 ````
 
 ---
 
-## 🧪 Setup Instructions
+## 📦 Requirements
 
-### 1. Clone the Repo & Set Up Environment
+- Python 3.7+
+- Gmail account with **App Passwords enabled**
+- IMAP access enabled in Gmail settings
+
+---
+
+## 📄 Setup
+
+### 1. 📌 Gmail Preparation
+
+- Go to [Google Account > Security > App Passwords](https://myaccount.google.com/security)
+- Generate an App Password for "Mail"
+- Enable **IMAP access** in Gmail settings
+
+### 2. 📦 Install Dependencies
+
 ```bash
-git clone <your-repo-url>
-cd twilio_food_insecurity
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+pip install pandas openpyxl
 ````
 
-### 2. Add Twilio Credentials
+> Jupyter is optional but recommended for interactive use.
 
-In your Jupyter Notebook or `.env`:
+---
+
+## 🧪 Running the Project
+
+### 📤 1. Send Emails
+
+Use `send_emails()` function to send inquiry emails to all contacts in `sample.xlsx`.
 
 ```python
-TWILIO_ACCOUNT_SID = 'your_account_sid'
-TWILIO_AUTH_TOKEN = 'your_auth_token'
-TWILIO_PHONE_NUMBER = '+1XXXXXXXXXX'
+send_emails()
+```
+
+### 📥 2. Check for Responses
+
+Use `check_responses()` to scan Gmail for replies and update the sheet accordingly.
+
+```python
+check_responses()
 ```
 
 ---
 
-## 📞 Call Flow (Voice Logic)
+## 📝 Excel Format
 
-1. Patient receives a call
+Ensure your `sample.xlsx` looks like this:
 
-2. First Question:
+| Name       | Email                                             |
+| ---------- | ------------------------------------------------- |
+| John Doe   | [johndoe@example.com](mailto:johndoe@example.com) |
+| Jane Smith | [janesmith@gmail.com](mailto:janesmith@gmail.com) |
 
-   > "Have you worried your food would run out before you had money to buy more?"
-
-   * Press `1` for Yes
-   * Press `2` for No
-
-3. Second Question (if Yes to Q1):
-
-   > "Did the food you bought not last, and you didn’t have money to get more?"
-
-4. If any answer is `1`, Twilio will say:
-
-   > "We’ll now follow up with more questions via SMS or a care team member."
-
-5. All responses are logged in the console (for now)
+A `Food Insecurity` column will be added/updated automatically.
 
 ---
 
-## 🔧 Running the Project
+## 🛡️ Safety Tips
 
-### Step 1: Start Flask Server
-
-```bash
-python twilio_voice_server.py
-```
-
-### Step 2: Expose Flask with Ngrok
-
-```bash
-ngrok http 5000
-```
-
-Copy the HTTPS forwarding URL (e.g., `https://abcd.ngrok.io`)
-
-### Step 3: Update Twilio Webhook
-
-* Go to [Twilio Console > Phone Numbers](https://console.twilio.com/)
-* Under “A CALL COMES IN”, choose:
-
-  * Method: `POST`
-  * URL: `https://abcd.ngrok.io/voice`
-  * Save
-
-### Step 4: Run Jupyter Notebook
-
-Open `food_insecurity_voice_workflow.ipynb`, then:
-
-* Load Excel data
-* Set `voice_url` to your Ngrok `/voice` URL
-* Run the notebook to place outbound calls
+* Do **not** share your App Password.
+* Gmail may rate-limit if too many emails are sent at once. Add `time.sleep(1)` between sends.
+* Always test with your own email first before bulk sending.
 
 ---
 
-## 🛠️ Troubleshooting
+## 📈 Example Output
 
-* **Call connects but no voice?**
+```
+[INFO] Excel file loaded successfully.
+[📤] Sent to John Doe <johndoe@example.com>
+[INFO] Connecting to IMAP...
+[REPLY] janesmith@gmail.com ➜ "yes, i need help."
+[✅] Marked YES for janesmith@gmail.com
+[✅] Response check complete.
+```
 
-  * Make sure Flask is running and POST requests are hitting `/voice`
-  * Confirm `Ngrok` is correctly exposing port `5000`
 
-* **Twilio trial errors?**
-
-  * Trial accounts can only call verified numbers
-  * Upgrade to remove this restriction
-
-* **Timeout or silence?**
-
-  * Increase `timeout` in `Gather` block to 10–15 seconds
-  * Ensure fallback `Say` is in place if no DTMF is pressed
 
 ---
